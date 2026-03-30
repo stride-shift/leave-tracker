@@ -1,0 +1,318 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------- TENANT (Organization) ----------------
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String                         // e.g. "Strideshift Global"
+  domain    String   @unique               // e.g. "strideshift.ai"
+  logo      String?                        // URL to org logo
+  settings  Json?                          // org-specific settings (leave policies, etc.)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  users       User[]
+  leaveTypes  LeaveType[]
+  groups      Group[]
+  projects    Project[]
+  organizations Organization[]
+
+  @@map("tenants")
+}
+
+// ---------------- AUTH USERS ----------------
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  fullName    String   @map("full_name")
+  avatarUrl   String?  @map("avatar_url")
+  role        UserRole @default(ADMIN)
+  refresh_token String @default("")
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  password    String?
+
+  contractStartDate DateTime? @map("contract_start_date")
+  contractEndDate   DateTime? @map("contract_end_date")
+
+  tenantId String? @map("tenant_id")
+  tenant   Tenant? @relation(fields: [tenantId], references: [id])
+
+  // org-chart (manager ↔ members)
+  managerOf      UserManager[] @relation("manager")
+  managedBy      UserManager[] @relation("member")
+
+  // leave system
+  leaves         LeaveRequest[]
+  assignedTypes  UserLeaveType[]
+
+  // group & project relations
+  managedGroups  Group[]   @relation("groupManager")
+  groups         UserGroup[] // groups the user belongs to
+  projects       UserProject[] // projects the user belongs to
+  approvedLeaveRequests LeaveRequest[] @relation("ManagerApprovedLeaves")
+  ownedProjects    Project[]          @relation("projectOwner")
+  activities       ProjectActivity[]  @relation("activityAuthor")
+  uploadedResources ProjectResource[] @relation("resourceUploader")
+
+  @@map("users")
+}
+
+// ---------------- LEAVE TYPES ----------------
+model LeaveType {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+  isDeleted   Boolean  @default(false)  // soft-delete flag
+
+  tenantId String? @map("tenant_id")
+  tenant   Tenant? @relation(fields: [tenantId], references: [id])
+
+  requests UserLeaveType[]
+  leaves   LeaveRequest[]
+
+  @@map("leave_type")
+}
+
+// ---------------- LEAVE REQUESTS ----------------
+model LeaveRequest {
+  id           String      @id @default(cuid())
+  userId       String      @map("user_id")
+  leaveTypeId  String      @map("leave_type_id")
+  startDate    DateTime    @map("start_date") @db.Date
+  endDate      DateTime    @map("end_date") @db.Date
+  reason       String?
+  description       String?
+  status       LeaveStatus @default(PENDING)
+  requestedAt  DateTime    @default(now()) @map("requested_at")
+  updatedAt    DateTime    @default(now()) @updatedAt @map("updated_at")
+
+  contactPhone String?     @map("contact_phone")
+  contactEmail String?     @map("contact_email")
+  signature    String?     // base64 data URL of employee signature
+  managerSignature String? @map("manager_signature") // base64 of manager sign-off
+  managerNote  String?     @map("manager_note")
+
+  isPrivate    Boolean     @default(false) @map("is_private")
+  gcalEventId  String?     @map("gcal_event_id")
+  gcalSyncedAt DateTime?   @map("gcal_synced_at")
+  approvedBy   User?       @relation("ManagerApprovedLeaves", fields: [approvedById], references: [id])
+  approvedById String?
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id])
+
+  @@map("leave_request")
+}
+
+// ---------------- ORGANIZATION ----------------
+model Organization {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  industry  String?
+  website   String?
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  tenantId String? @map("tenant_id")
+  tenant   Tenant? @relation(fields: [tenantId], references: [id])
+
+  projects Project[]
+
+  @@map("organizations")
+}
+
+// ---------------- PROJECT ----------------
+model Project {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  description String?
+  isActive    Boolean       @default(true) @map("is_active")
+  status      ProjectStatus @default(ONGOING)
+  value       Float?                          // deal/contract value
+  progress    Int           @default(0)       // 0-100 completion %
+  startDate       DateTime? @map("start_date")
+  expectedEndDate DateTime? @map("expected_end_date")
+  notes       String?
+  proposal        String?                        // proposal details/summary
+  proposalDueDate DateTime? @map("proposal_due_date") // when proposal is due
+  priority        String?   @default("MEDIUM")   // LOW, MEDIUM, HIGH, URGENT
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  tenantId String? @map("tenant_id")
+  tenant   Tenant? @relation(fields: [tenantId], references: [id])
+
+  // owner (who runs this project)
+  ownerId String? @map("owner_id")
+  owner   User?   @relation("projectOwner", fields: [ownerId], references: [id])
+
+  // client organization
+  organizationId String? @map("organization_id")
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  groups     Group[]           // groups that belong to this project
+  members    UserProject[]     // direct project members (optional)
+  activities ProjectActivity[] // activity log / updates
+  resources  ProjectResource[] // files, links, documents
+
+  @@map("projects")
+}
+
+model ProjectActivity {
+  id        String   @id @default(cuid())
+  content   String
+  type      String   @default("note") // note, status_change, update, milestone
+  createdAt DateTime @default(now()) @map("created_at")
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  authorId String? @map("author_id")
+  author   User?   @relation("activityAuthor", fields: [authorId], references: [id])
+
+  @@map("project_activities")
+}
+
+model ProjectResource {
+  id        String   @id @default(cuid())
+  name      String
+  url       String
+  type      String   @default("link") // link, proposal, document, spreadsheet, presentation
+  createdAt DateTime @default(now()) @map("created_at")
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  uploadedById String? @map("uploaded_by_id")
+  uploadedBy   User?   @relation("resourceUploader", fields: [uploadedById], references: [id])
+
+  @@map("project_resources")
+}
+
+// ---------------- GROUP ----------------
+model Group {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  description String?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  tenantId String? @map("tenant_id")
+  tenant   Tenant? @relation(fields: [tenantId], references: [id])
+
+  // belongs to one project
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id])
+
+  // exactly one manager
+  managerId String @map("manager_id")
+  manager   User   @relation("groupManager", fields: [managerId], references: [id])
+
+  // list of members
+  members UserGroup[]
+
+  @@map("groups")
+}
+
+// ---------------- JUNCTION TABLES ----------------
+model UserManager {
+  managerId String @map("manager_id")
+  memberId  String @map("member_id")
+
+  manager User @relation("manager", fields: [managerId], references: [id], onDelete: Cascade)
+  member  User @relation("member", fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@id([managerId, memberId])
+  @@map("user_managers")
+}
+
+model UserLeaveType {
+  userId      String  @map("user_id")
+  leaveTypeId String  @map("leave_type_id")
+  isActive    Boolean @default(true) @map("is_active")
+  leaveBalance  Float    @default(0)
+  accrualRate   Float    @default(1.67) @map("accrual_rate")   // days earned per month
+  cycleStartDate DateTime @default(now()) @map("cycle_start_date") // when accrual cycle began
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: Cascade)
+  accrualLogs AccrualLog[]
+
+  @@id([userId, leaveTypeId])
+  @@map("user_leave_types")
+}
+
+model AccrualLog {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  leaveTypeId String   @map("leave_type_id")
+  amount      Float    // days accrued (e.g. 1.67)
+  balanceAfter Float   @map("balance_after") // balance after accrual
+  accrualDate DateTime @map("accrual_date")  // the month this accrual is for
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  userLeaveType UserLeaveType @relation(fields: [userId, leaveTypeId], references: [userId, leaveTypeId], onDelete: Cascade)
+
+  @@unique([userId, leaveTypeId, accrualDate]) // prevent double-accrual for same month
+  @@map("accrual_logs")
+}
+
+model UserGroup {
+  userId  String @map("user_id")
+  groupId String @map("group_id")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([userId, groupId])
+  @@map("user_groups")
+}
+
+model UserProject {
+  userId    String @map("user_id")
+  projectId String @map("project_id")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@id([userId, projectId])
+  @@map("user_projects")
+}
+
+// ---------------- ENUMS ----------------
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  TEAM_MEMBER
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum ProjectStatus {
+  LEAD
+  PENDING
+  ONGOING
+  WON
+  LOST
+}

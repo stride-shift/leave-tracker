@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls c:/Users/User/Desktop/leave-tracker/client/tsconfig*.json)",
+      "Bash(find c:/Users/User/Desktop/leave-tracker -type f \\\\\\(-name *.sql -o -name seed* -o -name *migration* \\\\\\))",
+      "Bash(node --input-type=module -e \":*)",
+      "Bash(ls c:/Users/User/Desktop/leave-tracker/client/public/logo-*.png)",
+      "Bash(gcloud --version)",
+      "Bash(gcloud services:*)"
+    ]
+  }
+}

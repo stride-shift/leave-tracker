@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strideshift — Project Gantt Chart</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5F0; --surface: #FFFFFF; --border: #E2DDD6;
+    --text-primary: #1A1814; --text-secondary: #7A7570; --text-muted: #B0ABA4;
+    --live: #2D6A4F; --live-bg: #D8F3DC;
+    --starting: #1B4F8A; --starting-bg: #D6E8FA;
+    --lead: #7B4F12; --lead-bg: #FAE8C0;
+    --waiting: #5A5550; --waiting-bg: #E8E4DE;
+    --urgent: #8B1A1A; --urgent-bg: #FADADD;
+    --marker: #C75B2A;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; padding: 40px; }
+  .page { max-width: 1160px; margin: 0 auto; }
+  header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1.5px solid var(--text-primary); }
+  .logo-block h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.5px; }
+  .logo-block p { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-secondary); margin-top: 4px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .meta { text-align: right; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-secondary); line-height: 1.8; }
+  .legend { display: flex; gap: 20px; margin-bottom: 28px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-secondary); font-family: 'DM Mono', monospace; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+  .gantt-container { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .gantt-header { display: grid; grid-template-columns: 190px 72px 56px 180px 1fr; background: var(--text-primary); color: white; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 10px 16px; gap: 8px; align-items: center; }
+  .timeline-header { display: grid; grid-template-columns: repeat(8, 1fr); font-size: 9px; letter-spacing: 0.06em; }
+  .timeline-header span { text-align: center; opacity: 0.8; }
+  .section-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); padding: 8px 16px 4px; background: var(--bg); border-top: 1px solid var(--border); }
+  .gantt-row { display: grid; grid-template-columns: 190px 72px 56px 180px 1fr; gap: 8px; padding: 7px 16px; border-top: 1px solid var(--border); align-items: center; transition: background 0.15s; }
+  .next-steps { font-size: 10px; color: var(--text-secondary); font-family: 'DM Mono', monospace; line-height: 1.5; }
+  .gantt-row:hover { background: #FAF9F6; }
+  .project-name { font-size: 13px; font-weight: 500; color: var(--text-primary); line-height: 1.3; }
+  .project-sub { font-size: 10px; color: var(--text-muted); font-family: 'DM Mono', monospace; margin-top: 2px; }
+  .owner-tag { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-secondary); white-space: nowrap; }
+  .links-col { display: flex; flex-direction: column; gap: 3px; }
+  .doc-link { display: inline-flex; align-items: center; gap: 3px; font-size: 9px; font-family: 'DM Mono', monospace; color: var(--starting); text-decoration: none; border: 0.5px solid var(--starting-bg); background: var(--starting-bg); border-radius: 3px; padding: 2px 5px; white-space: nowrap; overflow: hidden; max-width: 56px; }
+  .doc-link:hover { background: #B5D4F4; }
+  .doc-link svg { flex-shrink: 0; }
+  .bar-area { position: relative; height: 36px; }
+  .bar-area-inner { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(8, 1fr); }
+  .col-line { border-left: 1px dashed var(--border); height: 100%; }
+  .bar { position: absolute; height: 16px; border-radius: 3px; display: flex; align-items: center; padding: 0 7px; font-size: 10px; font-weight: 500; white-space: nowrap; overflow: hidden; font-family: 'DM Mono', monospace; letter-spacing: 0.02em; }
+  .bar-top { top: 2px; } .bar-bottom { top: 20px; } .bar-single { top: 10px; }
+  .bar-live    { background: var(--live-bg);     color: var(--live); }
+  .bar-soon    { background: var(--starting-bg); color: var(--starting); }
+  .bar-lead    { background: var(--lead-bg);     color: var(--lead); }
+  .bar-waiting { background: var(--waiting-bg);  color: var(--waiting); }
+  .today-line    { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--marker);   opacity: 0.7;  z-index: 10; }
+  .deadline-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--live);     opacity: 0.35; z-index: 10; }
+  .milestone-line{ position: absolute; top: 0; bottom: 0; width: 1px; background: var(--starting); opacity: 0.35; z-index: 10; }
+  .revert-line   { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--urgent);   opacity: 0.45; z-index: 10; }
+  .summary-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); margin-top: 28px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .summary-cell { background: var(--surface); padding: 16px 20px; text-align: center; }
+  .summary-num { font-size: 26px; font-weight: 600; letter-spacing: -1px; line-height: 1; }
+  .summary-lbl { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 5px; }
+  .footer { margin-top: 28px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-muted); display: flex; justify-content: space-between; }
+  @media print { body { padding: 20px; background: white; } .gantt-row:hover { background: white; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="logo-block">
+      <h1>Strideshift</h1>
+      <p>Project Gantt — 24 Mar to 17 Apr 2026</p>
+    </div>
+    <div class="meta">
+      Updated: 26 Mar 2026<br>
+      Live projects: 8 &nbsp;·&nbsp; Pending: 3 &nbsp;·&nbsp; Leads: 13<br>
+      Next deadline: 27 Mar (OMT · StdBank SA revert)
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--live-bg);border:1px solid var(--live);"></div>Live</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--starting-bg);border:1px solid var(--starting);"></div>Starting</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--lead-bg);border:1px solid var(--lead);"></div>Lead / pending</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--waiting-bg);border:1px solid var(--waiting);"></div>Waiting</div>
+  </div>
+
+  <!--
+    Timeline: 24 Mar to 17 Apr = 24 days = 100%
+    24 Mar =  0%   (today)
+    27 Mar = 12.5%  ← OMT deliver · StdBank SA revert · Dandemutande proposal
+    28 Mar = 16.7%
+    30 Mar = 25%    ← Cisco first deliverable
+    31 Mar = 29.2%  ← OMT invoice target
+     1 Apr = 33.3%  ← OMT sign-off meeting
+    10 Apr = 70.8%  ← Ctrack launch · Pragma C8 ends · Cape Town session end
+    15 Apr = 95.8%  ← Cisco delivery
+    17 Apr = 100%   ← Pragma C9 ends
+  -->
+
+  <div class="gantt-container">
+
+    <div class="gantt-header">
+      <div>Project</div>
+      <div>Owner</div>
+      <div>Docs</div>
+      <div>Next steps</div>
+      <div>
+        <div class="timeline-header">
+          <span>24 Mar</span><span>27 Mar</span><span>30 Mar</span><span>1 Apr</span>
+          <span>5 Apr</span><span>10 Apr</span><span>14 Apr</span><span>17 Apr</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== LIVE PROJECTS ===== -->
+    <div class="section-label">Live projects</div>
+
+    <!-- Britehouse -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">Britehouse</div>
+        <div class="project-sub">Integration strategy · ends May</div>
+      </div>
+      <div class="owner-tag">Stephen</div>
+      <div class="links-col">
+        <a class="doc-link" href="https://docs.google.com/spreadsheets/d/1JNqa2rVr-QsW4M0UWYNgy7jDkulKikvu/edit?gid=1833341702#gid=1833341702" target="_blank" title="Project plan">
+          <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M4 6h4M4 8h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>Plan
+        </a>
+        <a class="doc-link" href="https://drive.google.com/file/d/1wk6aqfOpXZmTOSX27G5Y5GM223CZ32HP/view?usp=sharing" target="_blank" title="Proposal PDF" style="background:#EAF3DE;border-color:#C0DD97;color:#27500A;">
+          <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M3 1h4.5L10 3.5V11H3V1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M7 1v3h3" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>PDF
+        </a>
+      </div>
+      <div class="next-steps">Kickoff mtg Thu w/ Stephen &amp; Shanne<br>Schedule exec interviews for Mon<br>Shanne weekly check-in w/ Stephen</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-soon bar-single" style="left:0%;width:100%;">Kickoff Thu → exec interviews → strategy (ends May)</div></div>
+    </div>
+
+    <!-- Cisco -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">Cisco</div>
+        <div class="project-sub">Confirmed · tranche 1 invoiced</div>
+      </div>
+      <div class="owner-tag">Justin</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Send 1st deliverable by Tue 31 Mar<br>Get CI guide from Cisco</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-soon bar-single" style="left:0%;width:95.8%;">Scripts → 1st deliverable Tue 31 Mar → iterate → ~15 Apr ▲</div></div>
+    </div>
+
+    <!-- Columba -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">Columba</div>
+        <div class="project-sub">Confirmed · 6 May &amp; 27 May</div>
+      </div>
+      <div class="owner-tag">B</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Dates confirmed: 6 May &amp; 27 May ✓<br>Confirm coaching team (B + Justin + Kia)</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-live bar-single" style="left:16.7%;width:83.3%;">Sessions confirmed: 6 May &amp; 27 May</div></div>
+    </div>
+
+    <!-- OMT -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">OMT</div>
+        <div class="project-sub">Deliver Thu 27 · sign-off Wed 1 Apr</div>
+      </div>
+      <div class="owner-tag">Justin</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Delivered to Bailey Thu 27 Mar ✓<br>Meet Bailey Wed 1 Apr for sign-off<br>Invoice + start licensing period</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-live bar-single" style="left:0%;width:33.3%;">Deliver Thu ▲ → meet Bailey Wed 1 Apr → invoice &amp; license</div></div>
+    </div>
+
+    <!-- Pragma -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">Pragma</div>
+        <div class="project-sub">Client relationship · Lead Sleuth pilot</div>
+      </div>
+      <div class="owner-tag">Stephen</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Reschedule Bani meeting<br>Set up Tebello as admin for Lead Sleuth<br>Structure as formal project w/ B + Shanne</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-live bar-single" style="left:0%;width:100%;">Bani rescheduled · NL ICP data received · Lead Sleuth setup</div></div>
+    </div>
+
+    <!-- Pragma Cyborg Habits -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">Pragma Cyborg Habits</div>
+        <div class="project-sub">Cohort 8 · Cohort 9 (loading)</div>
+      </div>
+      <div class="owner-tag">Shanne</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Justin to load Cohort 9 today<br>Justin to send usage report tomorrow<br>C8 &amp; C9 invoiced ✓</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <!-- C8 already started, runs to 10 Apr (70.8%) -->
+      <div class="bar bar-live bar-top" style="left:0%;width:70.8%;">Cohort 8 → 10 Apr ▲</div>
+      <!-- C9 started 27 Mar (12.5%), runs to 17 Apr (100%) -->
+      <div class="bar bar-live bar-bottom" style="left:12.5%;width:87.5%;">Cohort 9 · loading → 17 Apr</div>
+      </div>
+    </div>
+
+    <!-- Standard Bank Namibia -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">Standard Bank Namibia</div>
+        <div class="project-sub">Coaching · ends 24 Apr</div>
+      </div>
+      <div class="owner-tag">B</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Confirm recordings are on for all sessions<br>Book Rejoice 1:1 (Shanne to follow up)<br>1:1 Marizelle 24 Mar ✓</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-live bar-single" style="left:0%;width:100%;">1:1 sessions ongoing · Rejoice TBC · ends 24 Apr →</div></div>
+    </div>
+
+    <!-- ===== PENDING ===== -->
+    <div class="section-label">Pending</div>
+
+    <!-- Correlation -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">Correlation</div>
+        <div class="project-sub">Fri 27 Mar mtg w/ PPG · scoping TBC</div>
+      </div>
+      <div class="owner-tag">Justin</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Fri 27 Mar mtg w/ Stephen &amp; Michael<br>Intro to PPG (other shareholder)<br>Build scope &amp; proposal post-meeting</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-waiting bar-single" style="left:0%;width:45%;">Fri PPG meeting ▲ → scope &amp; proposal to follow</div></div>
+    </div>
+
+    <!-- Ctrack -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">Ctrack</div>
+        <div class="project-sub">Launch moved to 10 Apr · awaiting sign-off</div>
+      </div>
+      <div class="owner-tag">Alison</div>
+      <div class="links-col">
+        <a class="doc-link" href="https://drive.google.com/file/d/1NsjBokIjBLKmRfRc0Std5rRfMeN8lScb/view?usp=sharing" target="_blank" title="Ctrack Proposal PDF" style="background:#EAF3DE;border-color:#C0DD97;color:#27500A;">
+          <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M3 1h4.5L10 3.5V11H3V1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M7 1v3h3" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>PDF
+        </a>
+      </div>
+      <div class="next-steps">Ali to confirm 10 Apr w/ Anelise<br>Shanne to diarise 10 Apr for team<br>Ali to follow up with Anelise for sign-off on updated proposal</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-waiting bar-single" style="left:0%;width:70.8%;">Ali to confirm 10 Apr launch w/ Anelise · diarise 10 Apr ▲</div></div>
+    </div>
+
+    <!-- Sybrin -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">Sybrin / Lead Sleuth</div>
+        <div class="project-sub">Alison following up w/ Duncan</div>
+      </div>
+      <div class="owner-tag">Stephen</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Alison to speak to Duncan next week<br>Stephen configuring Duncan as admin<br>Await Ryan → Duncan handover</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-waiting bar-single" style="left:0%;width:30%;">Duncan follow-up next week</div></div>
+    </div>
+
+    <!-- ===== LEADS & PIPELINE ===== -->
+    <div class="section-label">Leads &amp; pipeline</div>
+
+    <!-- Dandemutande -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">Dandemutande</div>
+        <div class="project-sub">Proposal sent 26 Mar · awaiting response</div>
+      </div>
+      <div class="owner-tag">Alison</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Proposal sent tonight<br>Await client response</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-lead bar-single" style="left:0%;width:50%;">Proposal sent → awaiting response</div></div>
+    </div>
+
+    <!-- GSK / Tech Mahindra -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">GSK / Tech Mahindra</div>
+        <div class="project-sub">Contracts signed &amp; returned to TM</div>
+      </div>
+      <div class="owner-tag">B</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Contracts signed &amp; sent back to TM<br>Shanne scheduling Kate session next week<br>Formal proposal still to be submitted</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-lead bar-single" style="left:0%;width:55%;">Contracts signed → Kate session → proposal</div></div>
+    </div>
+
+    <!-- Hon. Selepe -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">Hon. Selepe</div>
+        <div class="project-sub">Labour / Parliament</div>
+      </div>
+      <div class="owner-tag">Stephen</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Stephen to send exec prep draft for Brazil meetings<br>Schedule CPT meeting on his return</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-lead bar-single" style="left:0%;width:85%;">Brazil → meet in CPT on return</div></div>
+    </div>
+
+    <!-- IFS -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">IFS</div>
+        <div class="project-sub">Meeting Thu 26 Mar · NDA to send</div>
+      </div>
+      <div class="owner-tag">Alison</div>
+      <div class="links-col"></div>
+      <div class="next-steps">NDA sent ✓<br>Meeting scheduled 2 Apr<br>Alison + Stephen + Justin to attend</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-lead bar-single" style="left:0%;width:8%;">Thu mtg ▲</div></div>
+    </div>
+
+    <!-- JET Education Services -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">JET Education Services</div>
+        <div class="project-sub">Alison &amp; Justin finalising proposal tomorrow</div>
+      </div>
+      <div class="owner-tag">Alison</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Alison + Justin meet tomorrow 9–10am<br>Agree pricing (~R150–200K)<br>Send to James by Fri 27 Mar</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-lead bar-single" style="left:0%;width:25%;">Directors align Thu → finalise &amp; send by Mon</div></div>
+    </div>
+
+    <!-- Nedbank -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">Nedbank</div>
+        <div class="project-sub">Post-pilot rollout · response expected</div>
+      </div>
+      <div class="owner-tag">B</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Awaiting response any day<br>B to contact Marlé if no contact by next week</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-lead bar-single" style="left:0%;width:35%;">Awaiting response on Cyborg Habits rollout</div></div>
+    </div>
+
+    <!-- Standard Bank SA -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">Standard Bank SA</div>
+        <div class="project-sub">Pilot · revert by Fri 27 Mar</div>
+      </div>
+      <div class="owner-tag">B</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Await revert by Fri 27 Mar<br>B to action pilot setup on confirmation</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-lead bar-single" style="left:0%;width:12.5%;">Revert Fri 27 Mar ▲</div></div>
+    </div>
+
+    <!-- ===== NEW LEADS ===== -->
+
+    <!-- Atlassian / Brian Duffy -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">Atlassian</div>
+        <div class="project-sub">Brian Duffy CRO · warm intro via Cindy</div>
+      </div>
+      <div class="owner-tag">Alison</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Alison to contact Cindy for warm intro to Brian Duffy</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-lead bar-single" style="left:8%;width:40%;">Warm intro → exploratory meeting</div></div>
+    </div>
+
+    <!-- PPG / Pinnacle Pet Group -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">PPG / Pinnacle Pet Group</div>
+        <div class="project-sub">50/50 JV partner w/ Correlation · Fri mtg</div>
+      </div>
+      <div class="owner-tag">Alison</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Fri 27 Mar intro meeting<br>Present Correlation work &amp; synthetic data approach<br>Potential to replicate engagement at higher rates</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-lead bar-single" style="left:0%;width:35%;">Fri intro mtg ▲ → scope TBC</div></div>
+    </div>
+
+    <!-- Pragma — AI for Engineers -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">Pragma — AI for Engineers</div>
+        <div class="project-sub">Proposal drafted · to be shared &amp; finalised</div>
+      </div>
+      <div class="owner-tag">Justin</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Justin to share proposal tomorrow<br>Alison + Justin to review &amp; finalise<br>Stefan Swanepoel key contact</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-lead bar-single" style="left:4%;width:45%;">Share proposal tomorrow → finalise → send</div></div>
+    </div>
+
+    <!-- Pragma — Board Coaching -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">Pragma — Board Coaching</div>
+        <div class="project-sub">3 free 1:1s offered · Scott lukewarm</div>
+      </div>
+      <div class="owner-tag">Justin</div>
+      <div class="links-col"></div>
+      <div class="next-steps">3 board members starting Cyborg Habits tomorrow<br>Justin to offer free 1:1 coaching to each<br>Alison to nudge Scott on retainer conversation</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-lead bar-single" style="left:4%;width:50%;">Board starts Cyborg Habits tomorrow → 1:1s to follow</div></div>
+    </div>
+
+    <!-- Pragma — Retainer -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">Pragma — Retainer</div>
+        <div class="project-sub">To be raised w/ Scott post Lead Sleuth session</div>
+      </div>
+      <div class="owner-tag">Stephen</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Raise with Scott after Lead Sleuth session w/ Hank<br>Alison + Stephen to present retainer concept<br>Frame as replacing 2 FTE costs</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-lead bar-single" style="left:16%;width:50%;">Post Lead Sleuth session → retainer discussion</div></div>
+    </div>
+
+    <!-- Sybrin — Contract Management -->
+    <div class="gantt-row">
+      <div>
+        <div class="project-name">Sybrin — Contract Management</div>
+        <div class="project-sub">Separate to Lead Sleuth · Haneki interest</div>
+      </div>
+      <div class="owner-tag">Alison</div>
+      <div class="links-col"></div>
+      <div class="next-steps">Alison to follow up with Hannetjie<br>Workflow system already built — add module</div>
+      <div class="bar-area"><div class="bar-area-inner">
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="col-line"></div><div class="col-line"></div><div class="col-line"></div><div class="col-line"></div>
+        <div class="today-line" style="left:0%;"></div>
+        <div class="revert-line" style="left:12.5%;"></div>
+        <div class="deadline-line" style="left:70.8%;"></div>
+      </div>
+      <div class="bar bar-lead bar-single" style="left:8%;width:45%;">Alison to follow up → scope &amp; demo</div></div>
+    </div>
+
+  </div>
+
+  <div class="summary-strip">
+    <div class="summary-cell">
+      <div class="summary-num">8</div>
+      <div class="summary-lbl">Live projects</div>
+    </div>
+    <div class="summary-cell">
+      <div class="summary-num">13</div>
+      <div class="summary-lbl">Leads in pipeline</div>
+    </div>
+    <div class="summary-cell">
+      <div class="summary-num" style="color:var(--live);">10 Apr</div>
+      <div class="summary-lbl">Ctrack launch</div>
+    </div>
+    <div class="summary-cell">
+      <div class="summary-num" style="color:var(--starting);">~15 Apr</div>
+      <div class="summary-lbl">Cisco delivery</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Strideshift · Project Gantt · Updated 26 Mar 2026</span>
+    <span>Confidential — internal use only</span>
+  </div>
+
+</div>
+</body>
+</html>

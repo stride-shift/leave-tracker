@@ -1,0 +1,33 @@
+{
+  "timeZone": "Africa/Johannesburg",
+  "dependencies": {},
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/calendar",
+    "https://www.googleapis.com/auth/calendar.events",
+    "https://www.googleapis.com/auth/script.external_request",
+    "https://www.googleapis.com/auth/userinfo.email"
+  ],
+  "addOns": {
+    "common": {
+      "name": "Leave Tracker",
+      "logoUrl": "https://fonts.gstatic.com/s/i/short-term/release/googlesymbols/calendar_clock/default/48px.svg",
+      "layoutProperties": {
+        "primaryColor": "#2D6A4F",
+        "secondaryColor": "#34d399"
+      },
+      "homepageTrigger": {
+        "runFunction": "onHomepage"
+      }
+    },
+    "calendar": {
+      "homepageTrigger": {
+        "runFunction": "onCalendarHomepage"
+      },
+      "eventOpenTrigger": {
+        "runFunction": "onEventOpen"
+      }
+    }
+  }
+}

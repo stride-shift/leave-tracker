@@ -1,0 +1,1301 @@
+/* ========================================
+   Google Calendar-style overrides
+   ======================================== */
+
+/* Container */
+.gcal-container {
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  font-family: "Google Sans", "Roboto", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  background: #fff;
+}
+
+/* ---- TOOLBAR (Header) ---- */
+.gcal-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fff;
+  min-height: 56px;
+}
+
+.gcal-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gcal-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* "Today" button */
+.gcal-today-btn {
+  padding: 6px 16px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  background: #fff;
+  color: #3c4043;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.15s;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.gcal-today-btn:hover {
+  background: #f1f3f4;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Nav arrows */
+.gcal-nav-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #5f6368;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.gcal-nav-btn:hover {
+  background: #f1f3f4;
+}
+
+/* Month/year title */
+.gcal-title {
+  font-size: 22px;
+  font-weight: 400;
+  color: #3c4043;
+  margin: 0;
+  padding-left: 8px;
+  white-space: nowrap;
+}
+
+/* View switcher */
+.gcal-view-switcher {
+  display: flex;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.gcal-view-btn {
+  padding: 6px 14px;
+  border: none;
+  border-right: 1px solid #dadce0;
+  background: #fff;
+  color: #3c4043;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.gcal-view-btn:last-child {
+  border-right: none;
+}
+
+.gcal-view-btn:hover {
+  background: #f1f3f4;
+}
+
+.gcal-view-btn-active {
+  background: #e8f0fe;
+  color: #1967d2;
+}
+
+.gcal-view-btn-active:hover {
+  background: #d2e3fc;
+}
+
+.gcal-toolbar-loading,
+.gcal-toolbar-error {
+  font-size: 14px;
+  color: #5f6368;
+  padding: 16px;
+}
+
+/* Status / error banners */
+.gcal-status-bar {
+  padding: 8px 16px;
+  background: #e8f0fe;
+  color: #1967d2;
+  font-size: 13px;
+  text-align: center;
+  border-bottom: 1px solid #d2e3fc;
+}
+
+.gcal-error-bar {
+  padding: 8px 16px;
+  background: #fce8e6;
+  color: #c5221f;
+  font-size: 13px;
+  text-align: center;
+  border-bottom: 1px solid #f5c6c2;
+}
+
+/* ---- SEARCH BAR ---- */
+.gcal-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #f1f3f4;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.gcal-search-icon {
+  color: #5f6368;
+  flex-shrink: 0;
+}
+
+.gcal-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: #3c4043;
+  outline: none;
+  font-family: inherit;
+}
+
+.gcal-search-input::placeholder {
+  color: #80868b;
+}
+
+.gcal-search-clear {
+  border: none;
+  background: none;
+  color: #5f6368;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px 6px;
+  line-height: 1;
+}
+
+/* ---- LEGEND ---- */
+.gcal-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fff;
+}
+
+.gcal-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gcal-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.gcal-legend-name {
+  font-size: 13px;
+  color: #3c4043;
+  font-weight: 500;
+}
+
+.gcal-legend-you {
+  color: #80868b;
+  font-weight: 400;
+}
+
+/* ---- CALENDAR WRAPPER ---- */
+.gcal-wrapper {
+  background: #fff;
+}
+
+/* ---- REACT-BIG-CALENDAR OVERRIDES ---- */
+
+/* Remove default rbc borders/backgrounds */
+.gcal-wrapper .rbc-calendar {
+  font-family: "Google Sans", "Roboto", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  border: none;
+}
+
+/* Header row (Mon, Tue, Wed...) */
+.gcal-wrapper .rbc-header {
+  border-bottom: 1px solid #e0e0e0;
+  padding: 8px 0;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: #70757a;
+  letter-spacing: 0.5px;
+  background: #fff;
+}
+
+.gcal-wrapper .rbc-header + .rbc-header {
+  border-left: none;
+}
+
+/* Month grid cells */
+.gcal-wrapper .rbc-month-view {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+}
+
+.gcal-wrapper .rbc-month-row {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.gcal-wrapper .rbc-month-row + .rbc-month-row {
+  border-top: none;
+}
+
+.gcal-wrapper .rbc-day-bg {
+  border-left: 1px solid #e0e0e0;
+}
+
+.gcal-wrapper .rbc-day-bg:first-child {
+  border-left: none;
+}
+
+/* Off-range (previous/next month days) */
+.gcal-wrapper .rbc-off-range {
+  color: #c4c7c5;
+}
+
+.gcal-wrapper .rbc-off-range-bg {
+  background: #f8f9fa;
+}
+
+/* Today highlight */
+.gcal-wrapper .rbc-today {
+  background: transparent;
+}
+
+/* Date number in month cells */
+.gcal-date-header {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #3c4043;
+  margin: 4px auto;
+  border-radius: 50%;
+  line-height: 1;
+}
+
+.gcal-date-today {
+  background: #1a73e8;
+  color: #fff !important;
+}
+
+/* Row content area */
+.gcal-wrapper .rbc-row-content {
+  z-index: 1;
+}
+
+/* Meeting vs Leave event styles */
+.gcal-event-meeting {
+  cursor: pointer !important;
+}
+
+.gcal-event-leave {
+  opacity: 0.92;
+}
+
+/* ---- EVENTS (the leave pills) ---- */
+.gcal-wrapper .rbc-event,
+.gcal-wrapper .rbc-event.rbc-selected {
+  border: none !important;
+  border-radius: 4px;
+  padding: 1px 0;
+  font-size: 12px;
+  outline: none;
+  box-shadow: none;
+}
+
+.gcal-wrapper .rbc-event:focus {
+  outline: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.gcal-wrapper .rbc-event.rbc-selected {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.gcal-event-content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.gcal-event-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  flex-shrink: 0;
+}
+
+.gcal-event-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  font-weight: 500;
+  font-size: 11px;
+}
+
+/* Privacy toggle button on events */
+.gcal-privacy-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 2px;
+  color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+  opacity: 0;
+}
+
+.gcal-event-content:hover .gcal-privacy-btn {
+  opacity: 1;
+}
+
+/* "+X more" link */
+.gcal-wrapper .rbc-show-more {
+  color: #1967d2;
+  font-size: 11px;
+  font-weight: 500;
+  text-decoration: none;
+  margin: 2px 8px;
+}
+
+.gcal-wrapper .rbc-show-more:hover {
+  text-decoration: underline;
+}
+
+/* ---- WEEK / DAY VIEW ---- */
+.gcal-wrapper .rbc-time-view {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+}
+
+.gcal-wrapper .rbc-time-header {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.gcal-wrapper .rbc-time-content {
+  border-top: none;
+}
+
+.gcal-wrapper .rbc-timeslot-group {
+  border-bottom: 1px solid #e8eaed;
+}
+
+.gcal-wrapper .rbc-time-slot {
+  border-top: none;
+}
+
+.gcal-wrapper .rbc-label {
+  font-size: 10px;
+  color: #70757a;
+  padding: 0 8px;
+}
+
+.gcal-wrapper .rbc-day-slot .rbc-time-slot {
+  border-top: 1px solid #f1f3f4;
+}
+
+.gcal-wrapper .rbc-current-time-indicator {
+  background-color: #ea4335;
+  height: 2px;
+}
+
+.gcal-wrapper .rbc-current-time-indicator::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ea4335;
+}
+
+/* ---- AGENDA VIEW — Timeline layout with day colors ---- */
+.gcal-wrapper .rbc-agenda-view {
+  border: none;
+  overflow-y: auto;
+  background: #141619;
+  padding: 12px 16px;
+}
+
+/* Hide the table header */
+.gcal-wrapper .rbc-agenda-view table thead {
+  display: none;
+}
+
+.gcal-wrapper .rbc-agenda-view table {
+  border: none;
+  border-collapse: separate;
+  border-spacing: 0 12px;
+  width: 100%;
+}
+
+/* Rows — each row gets a tinted background from --day-bg */
+.gcal-wrapper .rbc-agenda-view table tbody tr {
+  background: var(--day-bg, rgba(255, 255, 255, 0.03));
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+
+.gcal-wrapper .rbc-agenda-view table tbody tr:hover {
+  filter: brightness(1.15);
+}
+
+.gcal-wrapper .rbc-agenda-view table tbody td {
+  padding: 0;
+  border: none;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+/* First and last cells get rounded corners */
+.gcal-wrapper .rbc-agenda-view table tbody tr td:first-child {
+  border-radius: 10px 0 0 10px;
+}
+
+.gcal-wrapper .rbc-agenda-view table tbody tr td:last-child {
+  border-radius: 0 10px 10px 0;
+}
+
+/* Date cell */
+.gcal-wrapper .rbc-agenda-date-cell {
+  font-weight: 800;
+  font-size: 13px;
+  white-space: nowrap;
+  color: var(--day-accent, #e0e0e0);
+  padding: 16px 20px;
+  width: 130px;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  letter-spacing: 0.02em;
+}
+
+/* Time cell */
+.gcal-wrapper .rbc-agenda-time-cell {
+  white-space: nowrap;
+  color: #a0a4a8;
+  font-size: 13px;
+  font-weight: 400;
+  padding: 16px 20px;
+  width: 180px;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Event cell */
+.gcal-wrapper .rbc-agenda-view .rbc-agenda-event-cell {
+  padding: 10px 16px;
+}
+
+.gcal-wrapper .rbc-agenda-event-cell .rbc-event {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  color: inherit !important;
+  box-shadow: none !important;
+}
+
+.gcal-wrapper .rbc-agenda-event-cell .rbc-event .gcal-event-content {
+  color: #e8eaed;
+  gap: 10px;
+}
+
+.gcal-wrapper .rbc-agenda-event-cell .rbc-event .gcal-event-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--event-color, #4285f4);
+}
+
+.gcal-wrapper .rbc-agenda-event-cell .rbc-event .gcal-event-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #e8eaed;
+}
+
+/* ---- AGENDA VIEW — Light mode overrides ---- */
+:root .gcal-wrapper .rbc-agenda-view {
+  background: #f5f6f8;
+}
+
+:root .gcal-wrapper .rbc-agenda-view table tbody tr {
+  background: var(--day-bg-light, rgba(0, 0, 0, 0.02));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+:root .gcal-wrapper .rbc-agenda-view table tbody tr:hover {
+  filter: brightness(0.97);
+}
+
+:root .gcal-wrapper .rbc-agenda-date-cell {
+  color: var(--day-accent-light, #3c4043);
+  border-right-color: rgba(0, 0, 0, 0.06);
+}
+
+:root .gcal-wrapper .rbc-agenda-time-cell {
+  color: #5f6368;
+  border-right-color: rgba(0, 0, 0, 0.06);
+}
+
+:root .gcal-wrapper .rbc-agenda-event-cell .rbc-event .gcal-event-content {
+  color: #3c4043;
+}
+
+:root .gcal-wrapper .rbc-agenda-event-cell .rbc-event .gcal-event-text {
+  color: #3c4043;
+}
+
+/* ---- POPUP (when clicking "+X more") ---- */
+.gcal-wrapper .rbc-overlay {
+  background: #fff;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 8px;
+  z-index: 100;
+}
+
+.gcal-wrapper .rbc-overlay-header {
+  border-bottom: 1px solid #e0e0e0;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #3c4043;
+}
+
+/* ---- SELECTION HIGHLIGHT (when dragging to select dates) ---- */
+.gcal-wrapper .rbc-day-bg.rbc-selected-cell {
+  background: #e8f0fe;
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 768px) {
+  .gcal-toolbar {
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+
+  .gcal-toolbar-left,
+  .gcal-toolbar-right {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .gcal-title {
+    font-size: 18px;
+  }
+
+  .gcal-view-btn {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  .gcal-legend {
+    padding: 6px 12px;
+    gap: 8px;
+  }
+
+  .gcal-event-text {
+    font-size: 10px;
+  }
+}
+
+/* ========================================
+   DARK MODE (Google Calendar dark theme)
+   ======================================== */
+.dark .gcal-container {
+  background: #1f1f1f;
+  color: #e8eaed;
+}
+
+/* Toolbar */
+.dark .gcal-toolbar {
+  background: #1f1f1f;
+  border-bottom-color: #3c4043;
+}
+
+.dark .gcal-today-btn {
+  background: #1f1f1f;
+  color: #e8eaed;
+  border-color: #5f6368;
+}
+
+.dark .gcal-today-btn:hover {
+  background: #303134;
+}
+
+.dark .gcal-nav-btn {
+  color: #9aa0a6;
+}
+
+.dark .gcal-nav-btn:hover {
+  background: #303134;
+}
+
+.dark .gcal-title {
+  color: #e8eaed;
+}
+
+.dark .gcal-view-switcher {
+  border-color: #5f6368;
+}
+
+.dark .gcal-view-btn {
+  background: #1f1f1f;
+  color: #e8eaed;
+  border-right-color: #5f6368;
+}
+
+.dark .gcal-view-btn:hover {
+  background: #303134;
+}
+
+.dark .gcal-view-btn-active {
+  background: #394457;
+  color: #8ab4f8;
+}
+
+.dark .gcal-view-btn-active:hover {
+  background: #3c4964;
+}
+
+/* Search */
+.dark .gcal-search-bar {
+  background: #303134;
+  border-bottom-color: #3c4043;
+}
+
+.dark .gcal-search-icon {
+  color: #9aa0a6;
+}
+
+.dark .gcal-search-input {
+  color: #e8eaed;
+}
+
+.dark .gcal-search-input::placeholder {
+  color: #9aa0a6;
+}
+
+.dark .gcal-search-clear {
+  color: #9aa0a6;
+}
+
+/* Legend */
+.dark .gcal-legend {
+  background: #1f1f1f;
+  border-bottom-color: #3c4043;
+}
+
+.dark .gcal-legend-name {
+  color: #e8eaed;
+}
+
+.dark .gcal-legend-you {
+  color: #9aa0a6;
+}
+
+/* Status banners */
+.dark .gcal-status-bar {
+  background: #394457;
+  color: #8ab4f8;
+  border-bottom-color: #3c4964;
+}
+
+.dark .gcal-error-bar {
+  background: #442c2e;
+  color: #f28b82;
+  border-bottom-color: #5c3a3c;
+}
+
+/* Calendar wrapper */
+.dark .gcal-wrapper {
+  background: #1f1f1f;
+}
+
+.dark .gcal-wrapper .rbc-calendar {
+  color: #e8eaed;
+}
+
+/* Header row */
+.dark .gcal-wrapper .rbc-header {
+  background: #1f1f1f;
+  color: #9aa0a6;
+  border-bottom-color: #3c4043;
+}
+
+/* Month grid */
+.dark .gcal-wrapper .rbc-month-view {
+  border-top-color: #3c4043;
+}
+
+.dark .gcal-wrapper .rbc-month-row {
+  border-bottom-color: #3c4043;
+}
+
+.dark .gcal-wrapper .rbc-day-bg {
+  border-left-color: #3c4043;
+}
+
+/* Off-range */
+.dark .gcal-wrapper .rbc-off-range {
+  color: #5f6368;
+}
+
+.dark .gcal-wrapper .rbc-off-range-bg {
+  background: #292a2d;
+}
+
+/* Date headers */
+.dark .gcal-date-header {
+  color: #e8eaed;
+}
+
+.dark .gcal-date-today {
+  background: #8ab4f8;
+  color: #1f1f1f !important;
+}
+
+/* Week / Day view */
+.dark .gcal-wrapper .rbc-time-view {
+  border-top-color: #3c4043;
+}
+
+.dark .gcal-wrapper .rbc-time-header {
+  border-bottom-color: #3c4043;
+}
+
+.dark .gcal-wrapper .rbc-timeslot-group {
+  border-bottom-color: #3c4043;
+}
+
+.dark .gcal-wrapper .rbc-label {
+  color: #9aa0a6;
+}
+
+.dark .gcal-wrapper .rbc-day-slot .rbc-time-slot {
+  border-top-color: #303134;
+}
+
+.dark .gcal-wrapper .rbc-time-header-content {
+  border-left-color: #3c4043;
+}
+
+.dark .gcal-wrapper .rbc-time-content {
+  border-top-color: #3c4043;
+}
+
+.dark .gcal-wrapper .rbc-day-slot .rbc-events-container {
+  margin-right: 0;
+}
+
+/* Agenda view — dark */
+.dark .gcal-wrapper .rbc-agenda-view {
+  background: #141619;
+}
+
+.dark .gcal-wrapper .rbc-agenda-view table tbody tr {
+  background: var(--day-bg, rgba(255, 255, 255, 0.03));
+}
+
+.dark .gcal-wrapper .rbc-agenda-date-cell {
+  color: var(--day-accent, #e0e0e0);
+  border-right-color: rgba(255, 255, 255, 0.06);
+}
+
+.dark .gcal-wrapper .rbc-agenda-time-cell {
+  color: #a0a4a8;
+  border-right-color: rgba(255, 255, 255, 0.06);
+}
+
+.dark .gcal-wrapper .rbc-agenda-event-cell .rbc-event .gcal-event-content {
+  color: #e8eaed;
+}
+
+.dark .gcal-wrapper .rbc-agenda-event-cell .rbc-event .gcal-event-text {
+  color: #e8eaed;
+}
+
+/* Popup */
+.dark .gcal-wrapper .rbc-overlay {
+  background: #303134;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+}
+
+.dark .gcal-wrapper .rbc-overlay-header {
+  border-bottom-color: #3c4043;
+  color: #e8eaed;
+}
+
+/* Selection */
+.dark .gcal-wrapper .rbc-day-bg.rbc-selected-cell {
+  background: #394457;
+}
+
+/* Show more link */
+.dark .gcal-wrapper .rbc-show-more {
+  color: #8ab4f8;
+}
+
+/* Today cell */
+.dark .gcal-wrapper .rbc-today {
+  background: rgba(138, 180, 248, 0.05);
+}
+
+/* ========================================
+   MEETING DETAIL DIALOG
+   Modern, clean design inspired by Notion/Linear
+   ======================================== */
+
+/* Dialog container */
+.meeting-dialog {
+  font-family: "Google Sans", "Roboto", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
+
+/* Header */
+.meeting-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.meeting-dialog-accent {
+  width: 4px;
+  min-height: 100%;
+  background: #4285f4;
+  border-radius: 16px 0 0 0;
+  flex-shrink: 0;
+}
+
+.meeting-dialog-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.15s;
+}
+
+.meeting-dialog-close:hover {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* Body */
+.meeting-dialog-body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+/* Join Meeting CTA */
+.meeting-join-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1a73e8 0%, #4285f4 100%);
+  color: #fff;
+  text-decoration: none;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(66, 133, 244, 0.25);
+}
+
+.meeting-join-btn:hover {
+  box-shadow: 0 4px 16px rgba(66, 133, 244, 0.35);
+  transform: translateY(-1px);
+}
+
+.meeting-join-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Info rows (location, etc) */
+.meeting-info-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 2px;
+  color: #6b7280;
+}
+
+.meeting-info-icon {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+/* Section label */
+.meeting-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.meeting-section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+  padding: 0 2px;
+}
+
+/* Attachment cards grid */
+.meeting-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.meeting-attachment-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+
+.meeting-attachment-card:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.meeting-attachment-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.meeting-attachment-recording {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+.meeting-attachment-notes {
+  background: #f5f3ff;
+  color: #8b5cf6;
+}
+
+.meeting-attachment-generic {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* Description */
+.meeting-description {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #6b7280;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f9fafb;
+  border: 1px solid #f3f4f6;
+  max-height: 160px;
+  overflow-y: auto;
+  word-break: break-word;
+}
+
+/* Attendees */
+.meeting-attendees-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.meeting-attendee-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  transition: background 0.12s;
+}
+
+.meeting-attendee-row:hover {
+  background: #f9fafb;
+}
+
+.meeting-attendee-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.meeting-attendee-status {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Footer */
+.meeting-dialog-footer {
+  padding: 12px 20px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.meeting-gcal-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #9ca3af;
+  text-decoration: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.meeting-gcal-link:hover {
+  color: #4285f4;
+  background: #eff6ff;
+}
+
+/* ---- Meeting description HTML styling ---- */
+.gcal-description-html {
+  font-size: 13px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+.gcal-description-html a {
+  color: #4285f4;
+  text-decoration: none;
+  font-weight: 500;
+}
+.gcal-description-html a:hover {
+  text-decoration: underline;
+}
+.gcal-description-html br {
+  display: block;
+  margin: 1px 0;
+}
+.gcal-description-html img {
+  max-width: 100%;
+  border-radius: 6px;
+  margin: 6px 0;
+}
+.gcal-description-html p {
+  margin: 4px 0;
+}
+.gcal-description-html ul,
+.gcal-description-html ol {
+  padding-left: 18px;
+  margin: 4px 0;
+}
+.dark .gcal-description-html a {
+  color: #8ab4f8;
+}
+
+/* ---- Scrollbar styling for meeting dialog ---- */
+.gcal-description-html::-webkit-scrollbar,
+.max-h-\\[60vh\\]::-webkit-scrollbar {
+  width: 4px;
+}
+.gcal-description-html::-webkit-scrollbar-thumb,
+.max-h-\\[60vh\\]::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.3);
+  border-radius: 4px;
+}
+.gcal-description-html::-webkit-scrollbar-thumb:hover,
+.max-h-\\[60vh\\]::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.5);
+}
+
+/* ---- Scrollbar styling ---- */
+.meeting-dialog-body::-webkit-scrollbar,
+.meeting-description::-webkit-scrollbar {
+  width: 4px;
+}
+.meeting-dialog-body::-webkit-scrollbar-thumb,
+.meeting-description::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+.meeting-dialog-body::-webkit-scrollbar-thumb:hover,
+.meeting-description::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* ========================================
+   MEETING DIALOG — DARK MODE
+   ======================================== */
+.dark .meeting-dialog-header {
+  border-bottom-color: #374151;
+}
+
+.dark .meeting-dialog-accent {
+  background: #8ab4f8;
+}
+
+.dark .meeting-dialog-close {
+  color: #6b7280;
+}
+
+.dark .meeting-dialog-close:hover {
+  background: #374151;
+  color: #d1d5db;
+}
+
+.dark .meeting-join-btn {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.dark .meeting-join-btn:hover {
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+}
+
+.dark .meeting-info-row {
+  color: #9ca3af;
+}
+
+.dark .meeting-section-label {
+  color: #6b7280;
+}
+
+.dark .meeting-attachment-card {
+  border-color: #374151;
+}
+
+.dark .meeting-attachment-card:hover {
+  border-color: #4b5563;
+  background: #1f2937;
+  box-shadow: none;
+}
+
+.dark .meeting-attachment-recording {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+}
+
+.dark .meeting-attachment-notes {
+  background: rgba(139, 92, 246, 0.1);
+  color: #a78bfa;
+}
+
+.dark .meeting-attachment-generic {
+  background: #374151;
+  color: #9ca3af;
+}
+
+.dark .meeting-description {
+  background: #1f2937;
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+.dark .meeting-attendee-row:hover {
+  background: #1f2937;
+}
+
+.dark .meeting-attendee-avatar {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+.dark .meeting-dialog-footer {
+  border-top-color: #374151;
+}
+
+.dark .meeting-gcal-link {
+  color: #6b7280;
+}
+
+.dark .meeting-gcal-link:hover {
+  color: #8ab4f8;
+  background: rgba(138, 180, 248, 0.08);
+}
+
+.dark .meeting-dialog-body::-webkit-scrollbar-thumb,
+.dark .meeting-description::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark .meeting-dialog-body::-webkit-scrollbar-thumb:hover,
+.dark .meeting-description::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
